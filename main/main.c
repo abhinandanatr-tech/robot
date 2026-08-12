@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include "robotMain.h"
 
 void app_main(void)
 {
     while (true) {
-        printf("Hello from app_main!\n");
+		
+        RobotMain();
+        printf("Hello from abi_main!\n");
         sleep(1);
     }
 }

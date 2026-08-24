@@ -1,6 +1,7 @@
 idf_component_register(
     SRCS
         "wifi.c"
+        "http.c"
 
     INCLUDE_DIRS
         "."
@@ -10,5 +11,7 @@ idf_component_register(
         esp_event
         esp_netif
         nvs_flash
+        
+        esp_http_server
         
 )

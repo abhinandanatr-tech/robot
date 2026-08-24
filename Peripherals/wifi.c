@@ -46,10 +46,13 @@ static void wifi_event_handler(void *arg,
 
         ESP_LOGI(TAG, "Wi-Fi connected!");
 
+        
         ESP_LOGI(TAG,
-                 "IP Address: " IPSTR,
-                 IP2STR(&event->ip_info.ip));
-    }
+            "IP Address: " IPSTR,
+            IP2STR(&event->ip_info.ip));
+            
+            http_server_start();
+        }
 }
 
 

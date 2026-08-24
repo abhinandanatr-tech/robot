@@ -5,10 +5,12 @@
 
 void app_main(void)
 {
-    while (true) {
-		
+    while (true)
+    {
         RobotMain();
-        printf("Hello from abi_main!\n");
+        
+        printf("ESP32 Starting...\n");
         sleep(1);
-    }
+    }    
+    
 }

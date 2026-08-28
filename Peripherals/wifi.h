@@ -5,4 +5,5 @@
 
 void wifi_init(void);
 
+void ChangeWiFiCredentials(const char *ssid, const char *password);
 #endif

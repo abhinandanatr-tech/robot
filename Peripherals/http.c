@@ -1,10 +1,18 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "wifi.h"
+#include "http.h"
+#include "cJSON.h"
 #include "esp_log.h"
 #include "esp_http_server.h"
 
+
+httpd_handle_t server = NULL;
+
 static const char *TAG = "HTTP";
+
+static void MessageReceivedCallback(char *buffer);
 
 static esp_err_t receive_handler(httpd_req_t *req)
 {
@@ -24,7 +32,10 @@ static esp_err_t receive_handler(httpd_req_t *req)
 
     buffer[received] = '\0';
 
-    ESP_LOGI(TAG, "Received: %s", buffer);
+    if (received > 0)
+    {
+        MessageReceivedCallback(buffer);
+    }
 
     httpd_resp_send(
         req,
@@ -35,11 +46,19 @@ static esp_err_t receive_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+void stop_server()
+{
+	if (server != NULL) {
+        httpd_stop(server);
+        server = NULL;
+    }
+}
+
 void http_server_start(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
-    httpd_handle_t server = NULL;
+    //httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) == ESP_OK)
     {
@@ -54,4 +73,49 @@ void http_server_start(void)
 
         ESP_LOGI(TAG, "HTTP server started");
     }
+}
+
+static  void MessageReceivedCallback(char *buffer)
+{
+    if (buffer == NULL)
+    {
+        return;
+    }
+
+    cJSON *root = cJSON_Parse(buffer);
+    
+    if (root == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        ESP_LOGE(TAG, "Invalid JSON received: %s", buffer);
+        if (error_ptr != NULL)
+        {
+            ESP_LOGE(TAG, "JSON parse error near: %s", error_ptr);
+        }
+        return;
+    }
+
+    cJSON *WIFImessageSSID = cJSON_GetObjectItemCaseSensitive(root, "SSID");
+    cJSON *WIFImessagePassword = cJSON_GetObjectItemCaseSensitive(root, "Password");
+
+    if (cJSON_IsString(WIFImessageSSID) && (WIFImessageSSID->valuestring != NULL))
+    {
+        //ESP_LOGI(TAG, "Parsed JSON message: %s", WIFImessageSSID->valuestring);
+
+        if (cJSON_IsString(WIFImessagePassword) && (WIFImessagePassword->valuestring != NULL))
+        {
+            ESP_LOGI(TAG, "Wi-Fi credentials updated: SSID=%s, Password=%s", WIFImessageSSID->valuestring, WIFImessagePassword->valuestring);
+            ChangeWiFiCredentials(WIFImessageSSID->valuestring, WIFImessagePassword->valuestring);
+        }
+        else
+        {
+            ESP_LOGI(TAG, "JSON received but no 'Password' field: %s", cJSON_PrintUnformatted(root));
+        }
+    }
+    else
+    {
+        ESP_LOGI(TAG, "JSON received but no 'SSID' field: %s", cJSON_PrintUnformatted(root));
+    }
+
+    cJSON_Delete(root);
 }

@@ -3,4 +3,5 @@
 
 void http_server_start(void);
 
+void stop_server();
 #endif

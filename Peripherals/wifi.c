@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "wifi.h"
 
@@ -51,6 +52,7 @@ static void wifi_event_handler(void *arg,
             "IP Address: " IPSTR,
             IP2STR(&event->ip_info.ip));
             
+            stop_server();
             http_server_start();
         }
 }
@@ -119,4 +121,23 @@ void wifi_init(void)
     esp_wifi_start();
 
     ESP_LOGI(TAG, "Wi-Fi initialization completed");
+}
+
+void ChangeWiFiCredentials(const char *ssid, const char *password)
+{
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = "",
+            .password = ""
+        }
+    };
+
+    strncpy((char *)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid) - 1);
+    strncpy((char *)wifi_config.sta.password, password, sizeof(wifi_config.sta.password) - 1);
+
+    esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+    esp_wifi_disconnect();
+    esp_wifi_connect();
+
+    ESP_LOGI(TAG, "Wi-Fi credentials changed to SSID: %s", ssid);
 }
